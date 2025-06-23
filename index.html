@@ -4,26 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>greyish</title>
-  <link rel="icon" type="image/png" href="favicon-zoom.png" sizes="64x64">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chango&display=swap" rel="stylesheet">
-
+  <link rel="icon" type="image/png" href="favicon-zoom.png" sizes="64x64" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chango&display=swap" rel="stylesheet" />
   <style>
     body {
-      justify-content: flex-start;
-      padding-top: 8vh;
-      padding-bottom: 12vh;
       background-color: #fcfcfc;
       color: #333;
       font-family: 'Helvetica Neue', sans-serif;
+      margin: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      margin: 0;
+    }
+
+    .main-container {
+      display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 8vh;
+      padding-bottom: 12vh;
     }
 
     h1 {
@@ -50,14 +54,16 @@
       position: absolute;
       bottom: 1rem;
       font-size: 0.875rem;
-      color: #bbb;}
-
+      color: #bbb;
     }
   </style>
 </head>
 <body>
-  <h1>greyish</h1>
-  <p>permission without pressure • presence before productivity • cushion instead of correction</p>
+  <div class="main-container">
+    <h1>greyish</h1>
+    <p>permission without pressure • presence before productivity • cushion instead of correction</p>
+  </div>
   <footer>© 2025 greyish.love</footer>
 </body>
 </html>
+
