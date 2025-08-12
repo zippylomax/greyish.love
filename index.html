@@ -1,142 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>greyish</title>
-    <link rel="icon" type="image/png" href="favicon-zoom.png" sizes="64x64" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>greyish</title>
+  <link rel="icon" type="image/png" href="favicon-zoom.png" sizes="64x64" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Wendy+One&display=swap" rel="stylesheet">  
+  
+  <style> 
+    body {
+      background: linear-gradient(-45deg, #e7bbc7, #f9d3ac, #fce9aa, #afe5d2, #a0d6f7, #b7b6ec, #d3adeb);
+      background-size: 400% 400%;
+      animation: gradient 90s ease infinite;
+      font-family: "Nunito", sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
     
-    <style>
-        /* Main Body & Background */
-        body {
-            background: linear-gradient(-45deg, #e7bbc7, #f9d3ac, #fce9aa, #afe5d2, #a0d6f7, #b7b6ec, #d3adeb);
-            background-size: 400% 400%;
-            animation: gradient 120s ease infinite;
-            font-family: "Nunito", sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            align-items: center;
-        }
+    .main-container {
+      background: rgba(255, 255, 255, 0.4);
+      -webkit-backdrop-filter: blur(15px);
+      backdrop-filter: blur(15px);
+      border-radius: 20px; 
+      border: 1px solid rgba(255, 255, 255, 0.6); 
+      padding: 3rem 4rem;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 9vh;
+      padding-bottom: 11vh;
+  }
 
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+    h1.wendy-one-regular {
+      font-family: "Wendy One", sans-serif !important;
+      font-weight: 400;
+      font-style: normal;
+      font-size: 9.75rem;
+      background: linear-gradient(90deg, #e7bbc7, #f9d3ac, #fce9aa, #afe5d2, #a0d6f7, #b7b6ec, #d3adeb);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      margin: 0 0 1.25rem;
+      text-align: center;
+  }
 
-        /* Layout Wrappers */
-        #content-wrap {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
+    p, .tagline-main, .tagline-sub {
+      text-align: center;
+      max-width: 1100px;
+      padding: 0 1rem;
+  }
 
-        /* Logo Styling */
-        h1 {
-            margin: 0;
-            padding: 4rem 0;
-            text-align: center;
-        }
+    p {
+      font-size: 1.5rem;
+      color: #888;
+  }
 
-        h1 img {
-            width: 60vw;
-            max-width: 550px;
-            height: auto;
-        }
+    .tagline-main {
+      font-size: 1.5rem;
+      color: #9e9e9e;
+      margin-bottom: 0.5rem;
+  }
+   
+    .tenet-word {
+      background: linear-gradient(270deg, #e7bbc7, #f9d3ac, #fce9aa, #afe5d2, #a0d6f7, #b7b6ec, #d3adeb);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;  
+  }
+    
+    .tagline-main .de-emphasized {
+      color: #ccc;
+      font-size: 1.3rem;
+      text-decoration: line-through;
+  }
 
-        /* Glass Panel Styling */
-        .main-container {
-            background: rgba(255, 255, 255, 0.4);
-            -webkit-backdrop-filter: blur(15px);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            padding: 2rem 3rem;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            max-width: 90%;
-        }
-        
-        /* Typography */
-        p {
-            margin: 0.5rem 0; /* A little default vertical space */
-        }
+    .tagline-sub1 {
+      font-size: 1.3rem;
+      color: #bdbdbd
+      line-height: 1.5;
+  }
 
-        .tagline-main {
-            font-size: 1.5rem;
-            color: #888;
-            max-width: 1100px;
-            text-align: center;
-        }
+    .tagline-sub2 {
+      font-size: 1.1rem;
+      color: #bbb;
+      line-height: 1.4;
+  }
 
-        .tenet-word {
-            background: linear-gradient(270deg, #e7bbc7, #f9d3ac, #fce9aa, #afe5d2, #a0d6f7, #b7b6ec, #d3adeb);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            -webkit-text-fill-color: transparent;
-        }
+    footer {
+      position: absolute;
+      padding: 1rem 0;
+      font-size: 0.875rem;
+      color: #aaa;
+  }
 
-        .tagline-main .de-emphasized {
-            color: #ccc;
-            font-size: 1.3rem;
-        }
+    @media (max-width: 768px) {
+      h1.wendy-one-regular {
+        font-size: 4.5rem;
+    }
 
-        .tagline-sub1 {
-            font-size: 1.5rem;
-            color: #888;
-            text-align: center;
-            max-width: 1100px;
-            margin-bottom: 0.5rem;
-        }
+      .tagline-main {
+        font-size: 1.25rem;
+    }
 
-        .tagline-sub2 {
-            font-size: 1.2rem;
-            color: #bbb;
-            text-align: center;
-            max-width: 1100px;
-            line-height: 1.4;
-        }
+      .tagline-sub1 {
+        font-size: 1.15rem;
+    }
 
-        /* Footer */
-        footer {
-            width: 100%;
-            text-align: center;
-            padding: 1.5rem 0;
-            font-size: 0.875rem;
-            color: #aaa;
-        }
-    </style>
+      .tagline-sub2 {
+        font-size: 1.05rem;
+    }
+
+      footer {
+        font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    h1.wendy-one-regular {
+      font-size: 3.75rem;
+    }
+
+    .tagline-main {
+      font-size: 1.1rem;
+    }
+
+    .tagline-sub1 {
+      font-size: 0.95rem;
+    }
+
+    .tagline-sub2 {
+      font-size: 0.90rem;
+    }
+
+    footer {
+      font-size: 0.7rem;
+    }
+  }
+</style>
 </head>
 <body>
+  <div class="main-container">
+    <h1 class="wendy-one-regular">greyish</h1> 
+        <p class="tagline-main">
+            <span class="tenet-word"><b>permission</b></span> <s><span class="de-emphasized">pressure</span></s> | <span class="tenet-word"><b>presence</b></span> <s><span class="de-emphasized">productivity</span></s> | <span class="tenet-word"><b>connection</b></span> <s><span class="de-emphasized">correction</span></s>
+        </p>
+        <p class="tagline-sub1">
+            rest-forward tech centering unmet needs of the chronically invisible</br>
+            – unwell, alter-abled, neurospicy, elder-folk –</br>
+            all the <b>greyish middles</b> we so often overlook.<br>
+        </p>
 
-    <div id="content-wrap">
-        <h1><img src="greyish-logo1.png" alt="greyish logo"></h1>
-
-        <div class="main-container">
-            <p class="tagline-main">
-                <span class="tenet-word"><b>permission</b></span> <s><span class="de-emphasized">pressure</span></s> | <span class="tenet-word"><b>presence</b></span> <s><span class="de-emphasized">productivity</span></s> | <span class="tenet-word"><b>connection</b></span> <s><span class="de-emphasized">correction</span></s>
-            </p>
-            <p class="tagline-sub1">
-                rest-forward tech centering unmet needs of the chronically invisible</br>
-                – unwell, alter-abled, neurospicy, elder-folk –</br>
-                all the <b>greyish middles</b> we so often overlook.<br>
-            </p>
-        </div>
-    </div>
-
-    <footer>© 2025 greyish™</footer>
-
+  </div>
+  <footer>© 2025 greyish™</footer>
 </body>
 </html>
