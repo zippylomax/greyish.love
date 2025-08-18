@@ -52,7 +52,7 @@
       padding-bottom: 11vh;
   }
 
-    .button-container {
+     .button-container {
       display: flex;
       flex-direction: column;
       gap: 1rem; 
@@ -67,6 +67,30 @@
       text-decoration: none;
       transition: all 0.3s ease; 
       text-align: center;
+  }
+
+    .primary-button {
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      color: #555; 
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  }
+
+    .primary-button:hover {
+      background: rgba(255, 255, 255, 0.7); 
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); 
+      transform: translateY(-2px); 
+  }
+
+    .secondary-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      color: rgba(255, 255, 255, 0.8);
+  }
+
+    .secondary-button:hover {
+      background: rgba(255, 255, 255, 0.2); 
+      color: #fff;
   }
 
     h1.wendy-one-regular {
