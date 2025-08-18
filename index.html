@@ -76,9 +76,13 @@
   }
 
     .primary-button:hover {
-      background: linear-gradient(90deg, #e7bbc7, #f9d3ac, #fce9aa, #afe5d2, #a0d6f7, #b7b6ec, #d3adeb) 
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); 
-      transform: translateY(-2px); 
+      background: linear-gradient(270deg, #e7bbc7, #f9d3ac, #fce9aa, #afe5d2, #a0d6f7, #b7b6ec, #d3adeb);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
   }
 
     .secondary-button {
@@ -170,7 +174,7 @@
 
   <div class="button-container">
       <a href="#" class="button primary-button">you're invited</a>
-      <a href="#" class="button secondary-button">our mission</a>
+      <a href="#" class="button primary-button">our mission</a>
   </div>
    
 </div>
