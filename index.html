@@ -34,7 +34,7 @@
       100% {
         background-position: 0% 50%;
       }
-    }
+  }
     
     .main-container {
       background: rgba(255, 255, 255, 0.4);
@@ -50,6 +50,46 @@
       justify-content: center;
       padding-top: 9vh;
       padding-bottom: 11vh;
+  }
+
+    .button-container {
+      display: flex;
+      gap: 1rem; 
+      margin-top: 2rem; 
+  }
+
+    .button {
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px; 
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease; 
+      text-align: center;
+  }
+
+    .primary-button {
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      color: #555; 
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  }
+
+    .primary-button:hover {
+      background: rgba(255, 255, 255, 0.7); 
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); 
+      transform: translateY(-2px); 
+  }
+
+    .secondary-button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      color: rgba(255, 255, 255, 0.8);
+  }
+
+    .secondary-button:hover {
+      background: rgba(255, 255, 255, 0.2); 
+      color: #fff;
   }
 
     h1.wendy-one-regular {
@@ -127,6 +167,13 @@
             compassionate AI & peer support for the <b>greyish middles</b> we so often overlook <br>
         </p>
   </div>
+
+  <div class="button-container">
+      <a href="#" class="button primary-button">you're invited</a>
+      <a href="#" class="button secondary-button">our mission</a>
+  </div>
+   
+</div>
   
   <footer>© 2025 greyish™</footer>
   
