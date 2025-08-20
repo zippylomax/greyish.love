@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>greyish — procedural mindfulness bloom (POC)</title>
+<style>
+  :root{
+    --bg:#121314; --ink:#e9eef1; --muted:#9bb0b9; --panel:#1b1d1f; --accent:#b4c6ff;
+  }
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font:15px/1.45 system-ui,-apple-system,Segoe UI,Inter,Roboto,sans-serif}
+  .wrap{display:grid;grid-template-columns:300px 1fr;gap:14px;height:100%}
+  aside{background:var(--panel);padding:14px;overflow:auto}
+  main{display:grid;place-items:center;padding:14px}
+  canvas{width:min(92vmin,900px);height:min(92vmin,900px);background:transparent;border-radius:16px}
+  h1{font-size:16px;margin:0 0 8px}
+  .row{display:flex;gap:8px;align-items:center;margin:8px 0}
+  label{font-size:12px;color:var(--muted)}
+  input[type=range]{width:100%}
+  select,button,input[type=checkbox]{accent-color:var(--accent)}
+  .kbd{font:12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#25282b; padding:2px 6px; border-radius:6px}
+  .note{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside>
+    <h1>mindfulness bloom — procedural</h1>
+    <div class="row"><label>breaths/min</label><input id="bpm" type="range" min="3" max="8" step="0.1" value="5.5"><span id="bpmv">5.5</span></div>
+    <div class="row"><label>symmetry (petals)</label><input id="sym" type="range" min="4" max="16" step="1" value="8"><span id="symv">8</span></div>
+    <div class="row"><label>motion</label><input id="motion" type="range" min="0" max="1" step="0.01" value="0.6"><span id="motionv">0.60</span></div>
+    <div class="row"><label>generator</label>
+      <select id="gen">
+        <option value="rose" selected>Rose (r = cos(kθ))</option>
+        <option value="hypo">Hypotrochoid (spiro)</option>
+        <option value="liss">Lissajous ring</option>
+      </select>
+    </div>
+    <div class="row"><label>glow</label><input id="glow" type="range" min="0" max="1" step="0.01" value="0.6"><span id="glowv">0.60</span></div>
+    <div class="row"><label>palette</label>
+      <select id="pal">
+        <option value="aquaViolet" selected>aqua ↔ violet</option>
+        <option value="peachMint">peach ↔ mint</option>
+        <option value="greyish">greyish pastels</option>
+      </select>
+    </div>
+    <div class="row"><label><input id="low" type="checkbox"> low‑motion</label></div>
+    <div class="row"><label><input id="audio" type="checkbox" checked> gentle stream audio</label></div>
+    <div class="note">hint: press <span class="kbd">space</span> to pause/resume</div>
+  </aside>
+  <main><canvas id="cv" width="1024" height="1024"></canvas></main>
+</div>
+
+<script>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const bpm = document.getElementById('bpm'), bpmv = document.getElementById('bpmv');
+const sym = document.getElementById('sym'), symv = document.getElementById('symv');
+const motion = document.getElementById('motion'), motionv = document.getElementById('motionv');
+const glow = document.getElementById('glow'), glowv = document.getElementById('glowv');
+const pal = document.getElementById('pal');
+const low = document.getElementById('low');
+const gen = document.getElementById('gen');
+const audioChk = document.getElementById('audio');
+
+bpm.oninput = ()=> bpmv.textContent = (+bpm.value).toFixed(1);
+sym.oninput = ()=> symv.textContent = sym.value;
+motion.oninput = ()=> motionv.textContent = (+motion.value).toFixed(2);
+glow.oninput = ()=> glowv.textContent = (+glow.value).toFixed(2);
+
+let paused = false;
+window.addEventListener('keydown', e=>{
+  if(e.code === 'Space'){ paused = !paused; }
+});
+
+// Color palettes
+function lerp(a,b,t){ return a+(b-a)*t; }
+function lerpColor(c1,c2,t){
+  const a = c1.match(/\w\w/g).map(h=>parseInt(h,16));
+  const b = c2.match(/\w\w/g).map(h=>parseInt(h,16));
+  const r = [0,1,2].map(i=>Math.round(lerp(a[i],b[i],t)));
+  return '#'+r.map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+const palettes = {
+  aquaViolet: ['#70d7e6','#9b86ff'],
+  peachMint: ['#ffc7a6','#87e1c2'],
+  greyish:    ['#b7c2cc','#c9b0e8']
+};
+
+// Audio: gentle water-like bed using filtered noise
+let ac, noiseNode, biquad1, biquad2, gain;
+async function ensureAudio(){
+  if(ac) return;
+  ac = new (window.AudioContext||window.webkitAudioContext)();
+  const bufferSize = 4096;
+  const node = ac.createScriptProcessor(bufferSize, 1, 1);
+  node.onaudioprocess = e=>{
+    const out = e.outputBuffer.getChannelData(0);
+    for(let i=0;i<out.length;i++){ out[i] = (Math.random()*2-1) * 0.2; } // white noise
+  };
+  // Filter chain -> "stream"
+  biquad1 = ac.createBiquadFilter(); biquad1.type='lowpass'; biquad1.frequency.value=1200;
+  biquad2 = ac.createBiquadFilter(); biquad2.type='highpass'; biquad2.frequency.value=180;
+  gain = ac.createGain(); gain.gain.value = 0.08; // gentle
+  node.connect(biquad1); biquad1.connect(biquad2); biquad2.connect(gain); gain.connect(ac.destination);
+  noiseNode = node;
+}
+audioChk.addEventListener('change', async ()=>{
+  if(audioChk.checked){ await ensureAudio(); if(ac.state==='suspended') ac.resume(); }
+  else { if(ac) ac.suspend(); }
+});
+// auto-start audio if checked (user gesture often required; sliders count)
+['click','touchstart'].forEach(evt=>{
+  window.addEventListener(evt, async ()=>{
+    if(audioChk.checked){ await ensureAudio(); if(ac.state==='suspended') ac.resume(); }
+  }, {once:true});
+});
+
+// Drawing helpers
+function rosePath(ctx, k, scale){
+  // r = cos(k*theta), 0..2π
+  const steps = 1024;
+  ctx.beginPath();
+  for(let i=0;i<=steps;i++){
+    const th = i/steps * Math.PI*2;
+    const r = Math.cos(k*th);
+    const x = r * Math.cos(th) * scale;
+    const y = r * Math.sin(th) * scale;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+}
+function hypotrochoidPath(ctx, R, r, d, scale){
+  const steps = 2400;
+  ctx.beginPath();
+  for(let i=0;i<=steps;i++){
+    const t = i/steps * Math.PI*2 * (r/Math.gcd?Math.gcd(R,r):1) + 1e-6;
+    const x = (R - r) * Math.cos(t) + d * Math.cos(((R - r)/r) * t);
+    const y = (R - r) * Math.sin(t) - d * Math.sin(((R - r)/r) * t);
+    const X = x*scale, Y = y*scale;
+    if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+  }
+}
+function lissajousRing(ctx, a,b,delta,scale){
+  // trace a lissajous and expand outward radially to make a petal-like ring
+  const steps=1200, rings=4;
+  for(let j=0;j<rings;j++){
+    const rscale = scale * (0.6 + 0.1*j);
+    ctx.beginPath();
+    for(let i=0;i<=steps;i++){
+      const t = i/steps * Math.PI*2;
+      const x = Math.sin(a*t + delta) * rscale;
+      const y = Math.sin(b*t) * rscale;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+}
+
+// Polyfill for Math.gcd
+Math.gcd = (a,b)=>{ a=Math.abs(a); b=Math.abs(b); while(b){ const t=b; b=a%b; a=t; } return a; };
+
+let t0 = performance.now();
+function draw(){
+  if(paused) { requestAnimationFrame(draw); return; }
+  const t = (performance.now()-t0)/1000;
+  const breathsPerMin = parseFloat(bpm.value);
+  const cycle = 60/breathsPerMin; // seconds per full cycle
+  const phase = (t % cycle) / cycle; // 0..1
+  const breath = Math.sin(phase*2*Math.PI); // -1..1
+
+  const petals = parseInt(sym.value,10);
+  const motionAmt = low.checked ? 0.15*parseFloat(motion.value) : parseFloat(motion.value);
+  const glowAmt = parseFloat(glow.value);
+  const [cA, cB] = palettes[pal.value];
+  const color = lerpColor(cA, cB, (breath+1)/2 * 0.7 + 0.15); // pastel drift
+
+  // Bloom scale (95%..105%)
+  const bloom = 1.0 + 0.05 * (breath);
+  // Rotation: subtle CW on inhale (+), CCW on exhale (-)
+  const rot = (3 * breath) * motionAmt * (Math.PI/180); // radians
+
+  // Clear
+  ctx.clearRect(0,0,cv.width,cv.height);
+  // Soft vignette background
+  const g = ctx.createRadialGradient(cv.width/2, cv.height/2, cv.width*0.1, cv.width/2, cv.height/2, cv.width*0.6);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(0,0,0,0.25)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,cv.width,cv.height);
+
+  ctx.save();
+  ctx.translate(cv.width/2, cv.height/2);
+  ctx.scale(bloom, bloom);
+  ctx.rotate(rot);
+
+  // Glow halo (uses shadow)
+  ctx.save();
+  // soft colored shadow whose alpha brightens slightly with breath
+  const alpha = Math.floor(180 + 60*((breath+1)/2)).toString(16).padStart(2,'0');
+  ctx.shadowColor = color + alpha;
+  ctx.shadowBlur = 100 * glowAmt;
+  ctx.globalAlpha = 0.85;
+  drawSymmetry(ctx, petals, ()=>drawGenerator(ctx), color);
+  ctx.restore();
+
+  // Crisp stroke on top
+  ctx.globalAlpha = 0.9;
+  drawSymmetry(ctx, petals, ()=>drawGenerator(ctx), color);
+
+  ctx.restore();
+
+  requestAnimationFrame(draw);
+}
+
+function drawGenerator(ctx){
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.6;
+  // choose generator
+  const kind = gen.value;
+  const scale = 330;
+  if(kind==='rose'){
+    const k = 2.5; // tweakable
+    rosePath(ctx, k, scale);
+    ctx.stroke();
+  }else if(kind==='hypo'){
+    hypotrochoidPath(ctx, 7, 3, 3, scale/14);
+    ctx.stroke();
+  }else{
+    lissajousRing(ctx, 3,2, Math.PI/3, scale*0.7);
+  }
+}
+
+function drawSymmetry(ctx, n, drawOne, color){
+  // stroke gradient for softness
+  const grad = ctx.createLinearGradient(-400,-400,400,400);
+  grad.addColorStop(0, color);
+  grad.addColorStop(1, '#ffffff');
+  ctx.strokeStyle = grad;
+
+  for(let i=0;i<n;i++){
+    ctx.save();
+    ctx.rotate((i * 2*Math.PI)/n);
+    drawOne();
+    ctx.restore();
+  }
+}
+
+// kick things off
+bpmv.textContent=bpm.value; symv.textContent=sym.value; motionv.textContent=motion.value; glowv.textContent=glow.value;
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
