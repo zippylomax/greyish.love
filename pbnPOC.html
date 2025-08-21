@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>greyish — mandala paint‑by‑numbers (POC)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg:#181a1b; --panel:#202325; --ink:#e9eef1; --muted:#a9b6be; --accent:#b4c6ff;
+    --c1:#A6CEE3; --c2:#B2DF8A; --c3:#FB9A99; --c4:#CAB2D6; --c5:#FDD0A2; --c6:#80CEE1;
+  }
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;}
+  .app{display:grid;grid-template-columns:320px 1fr;gap:16px;height:100%;}
+  aside{background:var(--panel);padding:16px;overflow:auto}
+  main{display:grid;place-items:center;padding:16px}
+  .stage-wrap{width:min(92vmin,900px);aspect-ratio:1;border-radius:16px;background:#121314;box-shadow:0 0 0 1px #24282a inset}
+  .row{display:flex;gap:8px;align-items:center;margin:8px 0}
+  .row label{font-size:13px;color:var(--muted)}
+  .file{flex:1}
+  .palette{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0}
+  .sw{height:28px;border-radius:8px;border:1px solid #2b2f31;cursor:pointer}
+  .sw[aria-current="true"]{outline:2px solid var(--accent);outline-offset:2px}
+  .legend{font-size:13px;color:var(--muted);display:grid;gap:6px;margin-top:8px}
+  button{background:#2a2f31;border:1px solid #3a4043;color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
+  button:hover{background:#313739}
+  .note{font-size:12px;color:var(--muted)}
+  .kbd{font:12px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;background:#2a2f31;padding:2px 6px;border-radius:6px}
+  svg{width:100%;height:100%}
+  .layer{cursor:pointer;transition:filter .15s ease}
+  .layer:focus-visible{outline:none;filter:drop-shadow(0 0 0.6rem #6ab) brightness(1.05)}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  .progress{height:6px;background:#25292b;border-radius:999px;overflow:hidden}
+  .bar{height:100%;width:0;background:linear-gradient(90deg,#7fb7ff,#e8b5ff);transition:width .25s ease}
+  .toggle{display:flex;gap:8px;align-items:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h2 style="margin:0 0 6px">mandala paint‑by‑numbers — POC</h2>
+    <div class="note">load 2–6 SVG layers you exported from Illustrator. each becomes a tappable region.</div>
+
+    <div class="row"><label>Layer A</label><input class="file" type="file" accept=".svg" id="fileA"></div>
+    <div class="row"><label>Layer B</label><input class="file" type="file" accept=".svg" id="fileB"></div>
+    <div class="row"><label>Layer C</label><input class="file" type="file" accept=".svg" id="fileC"></div>
+    <details style="margin:6px 0 12px">
+      <summary class="note">add more pickers</summary>
+      <div class="row"><label>Layer D</label><input class="file" type="file" accept=".svg" id="fileD"></div>
+      <div class="row"><label>Layer E</label><input class="file" type="file" accept=".svg" id="fileE"></div>
+      <div class="row"><label>Layer F</label><input class="file" type="file" accept=".svg" id="fileF"></div>
+    </details>
+
+    <div class="row"><label>Palette</label></div>
+    <div class="palette" id="palette">
+      <button class="sw" style="background:var(--c1)" data-color="var(--c1)" aria-current="true"></button>
+      <button class="sw" style="background:var(--c2)" data-color="var(--c2)"></button>
+      <button class="sw" style="background:var(--c3)" data-color="var(--c3)"></button>
+      <button class="sw" style="background:var(--c4)" data-color="var(--c4)"></button>
+      <button class="sw" style="background:var(--c5)" data-color="var(--c5)"></button>
+      <button class="sw" style="background:var(--c6)" data-color="var(--c6)"></button>
+    </div>
+
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <button id="toggleNums">toggle numbers</button>
+      <button id="clear">reset fills</button>
+      <button id="exportState">export JSON</button>
+    </div>
+
+    <div class="toggle">
+      <input type="checkbox" id="lowMotion" />
+      <label for="lowMotion" class="note">low‑motion highlight (reduced hover effects)</label>
+    </div>
+
+    <div class="legend" id="legend"></div>
+
+    <div class="hint">tip: pick a color, then click a layer to fill it. numbers map to the loading order (A=1, B=2, …). press <span class="kbd">1–6</span> to switch palette colors.</div>
+
+    <div style="margin-top:12px">
+      <div class="note">progress</div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stage-wrap">
+      <!-- the stage: we create an outer square viewBox and inject layers inside -->
+      <svg id="stage" viewBox="0 0 1000 1000" role="img" aria-label="Interactive mandala paint by numbers">
+        <defs>
+          <!-- number label style -->
+          <style>
+            .numlbl{font: 42px/1 ui-sans-serif, system-ui; fill:#8aa6b1; opacity:.9; user-select:none}
+          </style>
+        </defs>
+        <g id="root">
+          <!-- layers injected here -->
+        </g>
+        <g id="numbers" style="display:none"></g>
+      </svg>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  const stage = document.getElementById('stage');
+  const root  = document.getElementById('root');
+  const nums  = document.getElementById('numbers');
+  const legend= document.getElementById('legend');
+  const bar   = document.getElementById('bar');
+  const paletteEl = document.getElementById('palette');
+  const lowMotion = document.getElementById('lowMotion');
+
+  const pickers = ['A','B','C','D','E','F'].map(k => [k, document.getElementById('file'+k)]);
+  const state = { currentColor: getComputedStyle(document.documentElement).getPropertyValue('--c1').trim(),
+                  layers: [], showNumbers:false };
+
+  // palette interactions
+  paletteEl.addEventListener('click', (e)=>{
+    if(!e.target.matches('.sw')) return;
+    [...paletteEl.querySelectorAll('.sw')].forEach(b=>b.removeAttribute('aria-current'));
+    e.target.setAttribute('aria-current','true');
+    state.currentColor = getComputedStyle(e.target).backgroundColor;
+  });
+  // keyboard 1..6 selects palette swatches
+  window.addEventListener('keydown',(ev)=>{
+    const idx = parseInt(ev.key,10);
+    if(idx>=1 && idx<=6){
+      const sw = paletteEl.querySelectorAll('.sw')[idx-1];
+      if(sw){ sw.click(); }
+    }
+  });
+
+  // load each selected SVG into a <g class="layer" data-name="layerA">
+  pickers.forEach(([key, input], idx)=>{
+    input?.addEventListener('change', async ()=>{
+      const file = input.files?.[0];
+      if(!file) return;
+      const txt  = await file.text();
+      const svg  = parseSVG(txt);
+
+      // take viewBox from first loaded file (if available)
+      if(state.layers.length===0){
+        const vb = svg.getAttribute('viewBox') || null;
+        const w = svg.getAttribute('width'), h = svg.getAttribute('height');
+        if(vb) stage.setAttribute('viewBox', vb);
+        else if(w && h){ stage.setAttribute('viewBox',`0 0 ${w} ${h}`); }
+      }
+
+      // wrap incoming content into a single group for filling
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      g.classList.add('layer');
+      g.setAttribute('tabindex','0');
+      const name = 'layer'+key;
+      g.dataset.name = name;
+      // ensure no pre-existing fills override ours
+      stripFills(svg);
+      // move children of incoming SVG into our group
+      while(svg.firstChild){ g.appendChild(svg.firstChild); }
+
+      // initial style
+      g.style.fill = 'transparent';
+      g.style.stroke = '#88969c';
+      g.style.strokeWidth = '1';
+
+      // click to fill with current color
+      g.addEventListener('click', ()=>{
+        g.style.fill = state.currentColor;
+        updateLegend();
+        updateProgress();
+      });
+
+      if(!lowMotion.checked){
+        g.addEventListener('mouseenter', ()=> g.style.filter='brightness(1.06)');
+        g.addEventListener('mouseleave', ()=> g.style.filter='');
+      }
+
+      root.appendChild(g);
+      state.layers.push({name, number: state.layers.length+1, color: null, g});
+      updateLegend();
+      updateProgress();
+      rebuildNumbers();
+    });
+  });
+
+  // strip all explicit fills from incoming SVG so our group fill wins
+  function stripFills(svg){
+    svg.querySelectorAll('[fill]').forEach(n=>{
+      n.setAttribute('data-orig-fill', n.getAttribute('fill'));
+      n.removeAttribute('fill');
+    });
+    svg.querySelectorAll('style').forEach(s=>s.remove()); // avoid CSS that re-adds fills
+  }
+
+  // parse string -> <svg>
+  function parseSVG(txt){
+    const tpl = document.createElement('template');
+    tpl.innerHTML = txt.trim();
+    const node = tpl.content.querySelector('svg');
+    if(!node){ throw new Error('No <svg> root in file'); }
+    // importNode to adopt into this document
+    return document.importNode(node, true);
+  }
+
+  // legend reflecting numbering and chosen colors
+  function updateLegend(){
+    legend.innerHTML = '';
+    state.layers.forEach((L,i)=>{
+      const color = L.g.style.fill && L.g.style.fill!=='transparent' ? L.g.style.fill : 'transparent';
+      const row = document.createElement('div');
+      row.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px">
+        <span style="width:16px;height:16px;border-radius:4px;border:1px solid #2a2f31;display:inline-block;background:${color}"></span>
+        <strong>#${i+1}</strong> <code style="font-size:12px;opacity:.8">${L.name}</code>
+      </span>`;
+      legend.appendChild(row);
+    });
+  }
+
+  // create or refresh number glyphs positioned at each layer's bbox center
+  function rebuildNumbers(){
+    nums.innerHTML='';
+    if(!state.showNumbers) { nums.style.display='none'; return; }
+    nums.style.display = 'block';
+    state.layers.forEach((L,i)=>{
+      const bbox = L.g.getBBox();
+      const cx = bbox.x + bbox.width/2;
+      const cy = bbox.y + bbox.height/2;
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', cx);
+      t.setAttribute('y', cy);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('dominant-baseline','central');
+      t.setAttribute('class','numlbl');
+      t.textContent = (i+1);
+      nums.appendChild(t);
+    });
+  }
+
+  function updateProgress(){
+    const total = state.layers.length;
+    const filled = state.layers.filter(L => L.g.style.fill && L.g.style.fill!=='transparent').length;
+    const pct = total? Math.round(100*filled/total) : 0;
+    bar.style.width = pct + '%';
+  }
+
+  // controls
+  document.getElementById('toggleNums').addEventListener('click', ()=>{
+    state.showNumbers = !state.showNumbers;
+    rebuildNumbers();
+  });
+  document.getElementById('clear').addEventListener('click', ()=>{
+    state.layers.forEach(L=> L.g.style.fill='transparent');
+    updateLegend(); updateProgress();
+  });
+  document.getElementById('exportState').addEventListener('click', ()=>{
+    const data = {
+      id: 'mandala-demo',
+      layers: state.layers.map((L,i)=>({
+        name: L.name,
+        number: i+1,
+        color: (L.g.style.fill && L.g.style.fill!=='transparent') ? rgbToHex(L.g.style.fill) : null
+      }))
+    };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), {href:url, download:'mandala-demo.json'});
+    a.click(); URL.revokeObjectURL(url);
+  });
+  lowMotion.addEventListener('change', ()=>{
+    // nothing complex — just removes hover brightening
+  });
+
+  // util: rgb(...) -> #RRGGBB
+  function rgbToHex(rgb){
+    const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+    if(!m) return rgb;
+    const [r,g,b] = m.slice(1,4).map(n=>(+n).toString(16).padStart(2,'0'));
+    return '#'+r+g+b;
+  }
+})();
+</script>
+</body>
+</html>
